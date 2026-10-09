@@ -1,0 +1,45 @@
+services:
+  - type: keyvalue
+    name: taj-redis
+    region: oregon
+    plan: starter
+    maxmemoryPolicy: noeviction
+    ipAllowList: []
+
+  - type: web
+    name: taj-api
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: JARVIS_API_TOKEN
+        generateValue: true
+      - key: JARVIS_MODEL_PROVIDER
+        value: openai
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://api.openai.com/v1
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: JOB_SEARCH_SOURCES
+        value: arbeitnow,remoteok
+      - key: DATABASE_URL
+        fromDatabase:
+          name: taj-postgres
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: keyvalue
+          name: taj-redis
+          property: connectionString
+
+databases:
+  - name: taj-postgres
+    databaseName: taj
+    user: taj
+    region: oregon
+    plan: basic-256mb

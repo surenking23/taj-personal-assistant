@@ -1,0 +1,78 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      JARVIS_API_TOKEN: ${JARVIS_API_TOKEN:?Set JARVIS_API_TOKEN in .env.deploy}
+      JARVIS_WORKSPACE: /data/workspace
+      JARVIS_MODEL_PROVIDER: ${JARVIS_MODEL_PROVIDER:-openai}
+      COPILOT_MODEL: ${COPILOT_MODEL:-auto}
+      DATABASE_URL: postgresql+psycopg://taj:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}@postgres:5432/taj
+      REDIS_URL: redis://redis:6379/0
+      JOB_SEARCH_SOURCES: ${JOB_SEARCH_SOURCES:-arbeitnow,remoteok}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:3b}
+    ports:
+      - "${TAJ_BIND_ADDRESS:-127.0.0.1}:${TAJ_PORT:-8000}:8000"
+    volumes:
+      - taj-workspace:/data/workspace
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: taj
+      POSTGRES_USER: taj
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.deploy}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taj -d taj"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:
+  redis-data:
+  taj-workspace:

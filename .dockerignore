@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+!.env.deploy.example
+.venv
+__pycache__
+*.py[cod]
+*.db
+*.egg-info
+.pytest_cache
+.coverage
+htmlcov
+netlify-dist
+tests
+README.md
