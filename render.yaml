@@ -2,7 +2,7 @@ services:
   - type: keyvalue
     name: taj-redis
     region: oregon
-    plan: starter
+    plan: free
     maxmemoryPolicy: noeviction
     ipAllowList: []
 
@@ -10,7 +10,7 @@ services:
     name: taj-api
     runtime: docker
     region: oregon
-    plan: starter
+    plan: free
     dockerfilePath: ./Dockerfile
     dockerContext: .
     healthCheckPath: /health
@@ -19,8 +19,6 @@ services:
         generateValue: true
       - key: JARVIS_MODEL_PROVIDER
         value: openai
-      - key: OPENAI_API_KEY
-        sync: false
       - key: OPENAI_BASE_URL
         value: https://api.openai.com/v1
       - key: OPENAI_MODEL
@@ -42,4 +40,4 @@ databases:
     databaseName: taj
     user: taj
     region: oregon
-    plan: basic-256mb
+    plan: free
