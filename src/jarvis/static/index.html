@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#10151b">
+  <title>Taj — Personal Assistant</title>
+  <style>
+    :root{color-scheme:dark;--bg:#10151b;--panel:#171f28;--line:#2a3642;--text:#e7edf4;--muted:#9eacba;--accent:#64d6bd;--warn:#f0bd67;--bad:#f28b82}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 10% 0%,#192a34 0,transparent 44%),var(--bg);color:var(--text);font:15px/1.55 "Segoe UI",system-ui,sans-serif;min-height:100vh}
+    header{height:76px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 max(24px,calc((100vw - 1100px)/2))}
+    .brand{display:flex;align-items:center;gap:12px;font-weight:650;letter-spacing:.03em}.orb{width:34px;height:34px;border:1px solid var(--accent);border-radius:50%;box-shadow:0 0 20px #64d6bd55,inset 0 0 12px #64d6bd55;display:grid;place-items:center;color:var(--accent);font-size:12px}.header-actions{display:flex;align-items:center;gap:18px}.new-chat{border:1px solid var(--line);background:transparent;color:var(--muted);padding:7px 10px;font-size:12px}
+    .main-nav{display:flex;gap:6px}.nav-link{padding:8px 10px;background:transparent;color:var(--muted);font-size:13px}.nav-link.active{color:var(--accent);background:#64d6bd12}
+    .jobs-layout{max-width:1100px;margin:36px auto;padding:0 24px}.jobs-layout[hidden]{display:none}.job-filter-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.job-results{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;margin-top:18px}.job-card{padding:18px}.job-card h2{font-size:17px;margin:0 0 5px}.job-card p{color:var(--muted);font-size:13px;margin:5px 0}.job-card a{display:inline-block;margin-top:12px}.job-score{color:var(--accent)!important;font-weight:700}.job-skills{margin-top:10px!important}.source-reports{color:var(--muted);font-size:12px;white-space:pre-wrap;margin-top:10px}.job-description{max-height:140px;overflow:auto;white-space:pre-wrap}.link-button{background:#293641;color:var(--text);text-decoration:none;border-radius:8px;padding:8px 11px;font-size:13px}
+    main.secondary-view{display:block}.secondary-view{max-width:900px;margin:36px auto;padding:0 24px}.secondary-view[hidden],main[hidden]{display:none}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.field{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:13px}.field input,.field textarea{width:100%;font-size:14px}.field.full{grid-column:1/-1}.form-actions{display:flex;align-items:center;gap:12px;margin-top:18px}.form-actions p,.resume-note,.version-meta{color:var(--muted);font-size:12px}.resume-editor{width:100%;min-height:430px;resize:vertical;font:14px/1.5 Consolas,monospace}.version-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}.version-item{width:100%;text-align:left;background:#0e151b;color:var(--text);border:1px solid var(--line);font-weight:400}.version-item:hover{border-color:var(--accent)}.status-line{min-height:22px;color:var(--muted);font-size:13px}
+    .status{color:var(--muted);font-size:13px}.status:before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;border-radius:50%;background:var(--accent)}.status.offline:before{background:var(--warn)}
+    main{max-width:1100px;margin:36px auto;padding:0 24px;display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:22px}
+    .card{background:#171f28eF;border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 50px #0002}.chat{min-height:670px;display:flex;flex-direction:column;overflow:hidden}.chat-head{padding:22px 24px;border-bottom:1px solid var(--line)}h1{font-size:22px;margin:0 0 4px}.sub{color:var(--muted);margin:0;font-size:14px}
+    #messages{flex:1;padding:24px;display:flex;flex-direction:column;gap:14px;overflow:auto;max-height:550px}.message{max-width:88%;padding:13px 16px;border-radius:13px;white-space:pre-wrap;overflow-wrap:anywhere}.assistant{align-self:flex-start;background:#222e39}.user{align-self:flex-end;background:#17483f;border:1px solid #287d6c}.message small{display:block;margin-top:8px;color:var(--muted)}.message pre{white-space:pre-wrap;max-height:300px;overflow:auto;font:13px/1.5 Consolas,monospace;background:#0c1217;padding:12px;border-radius:8px}
+    .message .reply{white-space:normal}.message .reply p{margin:0 0 10px}.message .reply p:last-child{margin-bottom:0}.message .reply h1,.message .reply h2,.message .reply h3{font-size:1.05em;margin:12px 0 6px}.message .reply ul{margin:6px 0;padding-left:22px}.message .reply code{background:#0e151b;padding:2px 5px;border-radius:4px;font:13px Consolas,monospace}.message .reply pre{white-space:pre;overflow:auto}.thinking{color:var(--muted);font-style:italic}
+    .composer{padding:16px 20px 20px;border-top:1px solid var(--line)}.input-row{display:flex;gap:10px}input,textarea{font:inherit;color:var(--text);background:#0e151b;border:1px solid var(--line);border-radius:9px;padding:12px;outline:none}input:focus,textarea:focus{border-color:var(--accent)}#prompt{flex:1;min-width:0}button{font:inherit;font-weight:600;cursor:pointer;color:#0d1817;background:var(--accent);border:0;border-radius:9px;padding:11px 16px}button:hover{filter:brightness(1.08)}button:disabled{opacity:.5;cursor:wait}.hint{color:var(--muted);font-size:12px;margin:10px 2px 0}
+    aside{display:flex;flex-direction:column;gap:16px}.side-card{padding:18px}.side-card h2{font-size:15px;margin:0 0 10px}.side-card p,.side-card li{color:var(--muted);font-size:13px}.side-card ul{padding-left:18px;margin:8px 0 0}.token{width:100%;font-size:12px}.approval{border-top:1px solid var(--line);margin-top:12px;padding-top:12px}.approval button{width:100%;margin-top:8px}.approval-details{white-space:pre-wrap;overflow-wrap:anywhere;background:#0e151b;border-radius:7px;padding:10px;color:var(--text);font-size:12px}.secondary{background:#293641;color:var(--text)}.approval-state{color:var(--warn);font-size:12px}.warning{color:var(--warn)!important}
+    @media(max-width:800px){main{grid-template-columns:1fr;margin:20px auto}.chat{min-height:620px}aside{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}header{padding:0 20px;gap:12px;flex-wrap:wrap;height:auto;min-height:76px;padding-top:12px;padding-bottom:12px}.main-nav{order:3;width:100%;justify-content:center}.header-actions{gap:8px}.form-grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand"><div class="orb">T</div><span>TAJ</span></div>
+    <nav class="main-nav" aria-label="Main navigation">
+      <button class="nav-link active" type="button" data-view="chat">AI Chat</button>
+      <button class="nav-link" type="button" data-view="jobs">Jobs</button>
+      <button class="nav-link" type="button" data-view="profile">Career Profile</button>
+      <button class="nav-link" type="button" data-view="resume">Master Resume</button>
+    </nav>
+    <div class="header-actions"><button class="new-chat" id="new-chat" type="button">New chat</button><div class="status" id="connection-status">Checking model connection</div></div>
+  </header>
+  <main id="chat-view">
+    <section class="card chat">
+      <div class="chat-head"><h1>Good to have you here, Suren.</h1><p class="sub">Tell me what you want done on this PC. I’ll show you before any guarded action runs.</p></div>
+      <div id="messages" aria-live="polite">
+        <div class="message assistant">Hi Suren! I’m here to help. I can chat naturally and help with tasks on this PC. Try asking a question, or say “list files”, “read file README.md”, “open calculator”, or ask me to do something with a file.<small>I’ll ask before file overwrites, deletions, or running a PowerShell command.</small></div>
+      </div>
+      <form class="composer" id="composer">
+        <div class="input-row"><input id="prompt" autocomplete="off" placeholder="Ask Taj to do something..." aria-label="Your request"><button id="send" type="submit">Send</button></div>
+        <p class="hint">File changes, file deletion, and shell commands require approval. Paths stay inside your configured workspace.</p>
+      </form>
+    </section>
+    <aside>
+      <section class="card side-card">
+        <h2>Connection</h2><p>Enter your local Taj bearer token. Copilot is signed in through the Windows account running Taj; no API key is needed.</p>
+        <input id="token" class="token" type="password" placeholder="Bearer token" autocomplete="off" aria-label="API bearer token">
+      </section>
+      <section class="card side-card"><h2>What I can do now</h2><ul>
+        <li>Browse and read workspace files</li><li>Create a new workspace file</li><li>Open Notepad, Calculator, or Explorer</li><li>Run reviewed PowerShell commands</li>
+      </ul><p class="warning">Job search uses configured public listings. General web search, email, calendar, browser form automation, and external application submission are not connected. Unsupported tasks will not be claimed as completed.</p></section>
+      <section class="card side-card"><h2>Pending approvals</h2><div id="approvals"><p>No pending approvals in this session.</p></div></section>
+    </aside>
+  </main>
+  <main class="secondary-view" id="profile-view" hidden>
+    <section class="card side-card">
+      <h1>Career profile</h1>
+      <p class="sub">Only information you enter is saved. This profile is private to this local app and is not sent to job sites.</p>
+      <form id="profile-form">
+        <div class="form-grid">
+          <label class="field">Name<input name="name" maxlength="240"></label>
+          <label class="field">Email<input name="email" type="email" maxlength="320"></label>
+          <label class="field">Phone<input name="phone" maxlength="80"></label>
+          <label class="field">Location<input name="location" maxlength="240"></label>
+          <label class="field">LinkedIn URL<input name="linkedin_url" type="url" maxlength="2000"></label>
+          <label class="field">GitHub URL<input name="github_url" type="url" maxlength="2000"></label>
+          <label class="field full">Portfolio URL<input name="portfolio_url" type="url" maxlength="2000"></label>
+          <label class="field full">Professional headline<input name="professional_headline" maxlength="500"></label>
+          <h2 class="field full">Education</h2>
+          <label class="field">Degree<input name="degree" maxlength="240"></label>
+          <label class="field">College<input name="college" maxlength="240"></label>
+          <label class="field">University<input name="university" maxlength="240"></label>
+          <label class="field">Graduation year<input name="graduation_year" maxlength="20"></label>
+          <label class="field full">Relevant coursework (comma-separated)<input name="relevant_coursework"></label>
+          <h2 class="field full">Career targets</h2>
+          <label class="field">Primary role<input name="primary_role" maxlength="240"></label>
+          <label class="field">Experience level<input name="experience_level" maxlength="100" placeholder="For example: entry-level"></label>
+          <label class="field full">Secondary roles (comma-separated)<input name="secondary_roles"></label>
+          <label class="field full">Preferred industries (comma-separated)<input name="preferred_industries"></label>
+          <label class="field full">Preferred locations (comma-separated)<input name="preferred_locations"></label>
+          <label class="field full">Countries where you are authorized to work (leave blank if unknown)<input name="work_authorization_countries"></label>
+          <label class="field">Work mode<input name="work_mode" maxlength="80" placeholder="Remote, hybrid, onsite"></label>
+          <label class="field">Salary expectations<input name="salary_expectations" maxlength="240"></label>
+          <label class="field">Relocation preference<input name="relocation_preference" maxlength="100"></label>
+          <label class="field">Notice period<input name="notice_period" maxlength="100"></label>
+          <label class="field full">Skills (comma-separated)<textarea name="skills" rows="3"></textarea></label>
+          <label class="field full">Verified projects (JSON)<textarea name="projects" rows="12" placeholder='[{"name":"Project name","summary":"Verified summary","tools":["SQL"]}]'></textarea></label>
+        </div>
+        <div class="form-actions"><button type="submit">Save profile</button><p id="profile-status" class="status-line" role="status"></p></div>
+      </form>
+    </section>
+  </main>
+  <main class="secondary-view" id="resume-view" hidden>
+    <section class="card side-card">
+      <h1>Master resume</h1>
+      <p class="sub">This is your source of truth. Saving creates a new immutable version; earlier versions are never overwritten or deleted. Text and Markdown are supported in this phase.</p>
+      <label class="field" for="resume-content">Resume content<textarea id="resume-content" class="resume-editor" maxlength="100000"></textarea></label>
+      <label class="field" for="resume-note">Version note<input id="resume-note" maxlength="500" placeholder="What changed in this version?"></label>
+      <div class="form-actions"><button id="save-resume" type="button">Save as new version</button><p id="resume-status" class="status-line" role="status"></p></div>
+      <h2>Version history</h2>
+      <div id="resume-versions" class="version-list"><p class="resume-note">Loading versions…</p></div>
+    </section>
+  </main>
+  <main class="jobs-layout" id="jobs-view" hidden>
+    <section class="card side-card">
+      <h1>Job search</h1>
+      <p class="sub">Search live public listings from configured job sources, deduplicate them, and rank them against your saved profile and master resume. Match score uses fixed weights (skills 60%, role 25%, location/work mode/experience 5% each); unknown criteria are not inferred. Results are not fabricated.</p>
+      <form id="job-search-form">
+        <div class="job-filter-grid">
+          <label class="field">Role<input name="role" placeholder="Use saved target role if blank"></label>
+          <label class="field">Location<input name="location" placeholder="Use saved location if blank"></label>
+          <label class="field">Work mode<select name="remote_preference"><option value="">Any / saved preference</option><option value="remote">Remote</option><option value="onsite">On-site</option></select></label>
+          <label class="field">Experience level<input name="experience_level" placeholder="Entry-level, junior…"></label>
+          <label class="field">Minimum match score<input name="minimum_match_score" type="number" min="0" max="100" value="0"></label>
+          <label class="field">Company<input name="company"></label>
+          <label class="field">Salary contains<input name="salary"></label>
+          <label class="field">Keywords (comma-separated)<input name="keywords" placeholder="SQL, Power BI"></label>
+        </div>
+        <div class="form-actions"><button id="job-search-submit" type="submit">Find jobs</button><p id="job-search-status" class="status-line" role="status"></p></div>
+      </form>
+      <p id="job-source-reports" class="source-reports" role="status"></p>
+      <div id="job-results" class="job-results"></div>
+    </section>
+  </main>
+<script>
+  const tokenInput = document.querySelector("#token");
+  tokenInput.value = sessionStorage.getItem("jarvis-token") || "";
+  tokenInput.addEventListener("input", () => sessionStorage.setItem("jarvis-token", tokenInput.value.trim()));
+  const messages = document.querySelector("#messages");
+  const approvals = document.querySelector("#approvals");
+  const promptInput = document.querySelector("#prompt");
+  const sendButton = document.querySelector("#send");
+  const connectionStatus = document.querySelector("#connection-status");
+  const welcomeMessage = messages.firstElementChild;
+  let chatHistory = [];
+  try {
+    chatHistory = JSON.parse(localStorage.getItem("jarvis-chat-history") || "[]")
+      .filter(message => ["user", "assistant"].includes(message.role) && typeof message.content === "string")
+      .slice(-20);
+    for (const message of chatHistory) addMessage(message.content, message.role);
+  } catch {
+    localStorage.removeItem("jarvis-chat-history");
+  }
+  document.querySelector("#new-chat").addEventListener("click", () => {
+    chatHistory = [];
+    localStorage.removeItem("jarvis-chat-history");
+    messages.replaceChildren(welcomeMessage.cloneNode(true));
+    promptInput.focus();
+  });
+
+  function saveConversation() {
+    chatHistory = chatHistory.slice(-20);
+    localStorage.setItem("jarvis-chat-history", JSON.stringify(chatHistory));
+  }
+
+  function escapeHtml(value) {
+    return value.replace(/[&<>"']/g, character => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+  }
+
+  function markdownToHtml(value) {
+    const blocks = [];
+    let text = escapeHtml(value).replace(/```(?:[a-zA-Z0-9_-]+)?\s*\n([\s\S]*?)```/g, (_match, code) => {
+      const index = blocks.push(`<pre><code>${code}</code></pre>`) - 1;
+      return `@@BLOCK${index}@@`;
+    });
+    text = text.replace(/`([^`\n]+)`/g, (_match, code) => {
+      const index = blocks.push(`<code>${code}</code>`) - 1;
+      return `@@BLOCK${index}@@`;
+    });
+    text = text.replace(/^### (.+)$/gm, "<h3>$1</h3>")
+      .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+      .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
+      .replace(/^(?:-|\*) (.+)$/gm, "<li>$1</li>")
+      .replace(/(?:<li>.*<\/li>\n?)+/g, list => `<ul>${list.replace(/\n/g, "")}</ul>`)
+      .replace(/\n/g, "<br>");
+    return text.replace(/@@BLOCK(\d+)@@/g, (_match, index) => blocks[Number(index)]);
+  }
+
+  function addMessage(text, who = "assistant", detail = "") {
+    const node = document.createElement("div");
+    node.className = `message ${who}`;
+    if (who === "assistant") {
+      const content = document.createElement("div");
+      content.className = "reply";
+      content.innerHTML = markdownToHtml(text);
+      node.append(content);
+    } else {
+      node.textContent = text;
+    }
+    if (detail) {
+      const extra = document.createElement("small");
+      extra.textContent = detail;
+      node.append(extra);
+    }
+    messages.append(node);
+    messages.scrollTop = messages.scrollHeight;
+    return node;
+  }
+
+  function parseRequest(text) {
+    const value = text.trim();
+    let match;
+    if (/^(?:list|show)\s+(?:my\s+)?files(?:\s+(?:in|under)\s+(.+))?$/i.test(value)) {
+      match = value.match(/^(?:list|show)\s+(?:my\s+)?files(?:\s+(?:in|under)\s+(.+))?$/i);
+      return { action: "list_files", path: match[1] || "." };
+    }
+    if ((match = value.match(/^(?:read|open)\s+file\s+(.+)$/i))) return { action: "read_file", path: match[1].trim() };
+    if ((match = value.match(/^create\s+file\s+(.+?)\s+with\s+([\s\S]+)$/i))) return { action: "create_file", path: match[1].trim(), content: match[2] };
+    if ((match = value.match(/^(?:update|overwrite)\s+file\s+(.+?)\s+with\s+([\s\S]+)$/i))) return { action: "update_file", path: match[1].trim(), content: match[2] };
+    if ((match = value.match(/^(?:delete|remove)\s+file\s+(.+)$/i))) return { action: "delete_file", path: match[1].trim() };
+    if ((match = value.match(/^open\s+(notepad|calculator|calc|explorer)$/i))) return { action: "launch_app", app_name: match[1].toLowerCase() === "calc" ? "calculator" : match[1].toLowerCase() };
+    if ((match = value.match(/^run\s+command\s*:\s*([\s\S]+)$/i))) return { action: "run_command", command: match[1].trim() };
+    return null;
+  }
+
+  async function api(path, options = {}) {
+    const bearer = tokenInput.value.trim();
+    if (!bearer) throw new Error("Enter your API bearer token in the Connection panel first.");
+    const response = await fetch(path, {
+      ...options,
+      headers: { "Authorization": `Bearer ${bearer}`, "Content-Type": "application/json", ...(options.headers || {}) }
+    });
+    const body = response.status === 204 ? null : await response.json();
+    if (!response.ok) throw new Error(body?.detail || `Request failed (${response.status})`);
+    return body;
+  }
+
+  async function refreshStatus() {
+    if (!tokenInput.value.trim()) {
+      connectionStatus.textContent = "Enter API token to connect";
+      connectionStatus.classList.add("offline");
+      return;
+    }
+    try {
+      const state = await api("/v1/assistant/status");
+      if (state.model_reachable && state.model_available) {
+        connectionStatus.textContent = `${state.model_provider} online · ${state.model_name}`;
+        connectionStatus.classList.remove("offline");
+      } else if (!state.model_reachable && state.model_provider === "copilot") {
+        connectionStatus.textContent = "Local tools ready · install Copilot CLI";
+        connectionStatus.classList.add("offline");
+      } else if (!state.model_configured) {
+        connectionStatus.textContent = state.model_provider === "copilot"
+          ? "Local tools ready · sign in to Copilot CLI"
+          : `Local tools ready · configure ${state.model_provider.toUpperCase()}`;
+        connectionStatus.classList.add("offline");
+      } else if (!state.model_reachable) {
+        connectionStatus.textContent = state.model_provider === "copilot"
+          ? "Local tools ready · Copilot CLI unavailable"
+          : `Local tools ready · ${state.model_provider} unavailable`;
+        connectionStatus.classList.add("offline");
+      } else {
+        connectionStatus.textContent = `${state.model_provider} cannot access model ${state.model_name}`;
+        connectionStatus.classList.add("offline");
+      }
+    } catch (error) {
+      connectionStatus.textContent = error.message;
+      connectionStatus.classList.add("offline");
+    }
+  }
+  tokenInput.addEventListener("change", refreshStatus);
+
+  const views = {
+    chat: document.querySelector("#chat-view"),
+    jobs: document.querySelector("#jobs-view"),
+    profile: document.querySelector("#profile-view"),
+    resume: document.querySelector("#resume-view")
+  };
+  let loadedProfile = false;
+  let loadedResume = false;
+  document.querySelectorAll(".nav-link").forEach(button => button.addEventListener("click", async () => {
+    const view = button.dataset.view;
+    Object.entries(views).forEach(([name, element]) => { element.hidden = name !== view; });
+    document.querySelectorAll(".nav-link").forEach(item => item.classList.toggle("active", item === button));
+    try {
+      if (view === "profile" && !loadedProfile) await loadProfile();
+      if (view === "resume" && !loadedResume) await loadResume();
+      if (view === "jobs") await loadSavedJobs();
+    } catch (error) {
+      const status = document.querySelector(view === "profile" ? "#profile-status" : "#resume-status");
+      status.textContent = `Could not load ${view}: ${error.message}`;
+    }
+  }));
+
+  function splitList(value) {
+    return value.split(",").map(item => item.trim()).filter(Boolean);
+  }
+
+  async function loadProfile() {
+    const profile = await api("/v1/profile");
+    const form = document.querySelector("#profile-form");
+    const values = {
+      ...profile,
+      ...profile.education,
+      ...profile.career_target,
+      relevant_coursework: profile.education.relevant_coursework.join(", "),
+      secondary_roles: profile.career_target.secondary_roles.join(", "),
+      preferred_industries: profile.career_target.preferred_industries.join(", "),
+      preferred_locations: profile.career_target.preferred_locations.join(", "),
+      work_authorization_countries: profile.career_target.work_authorization_countries.join(", "),
+      skills: profile.skills.join(", "),
+      projects: JSON.stringify(profile.projects, null, 2)
+    };
+    for (const [name, value] of Object.entries(values)) {
+      if (form.elements.namedItem(name)) form.elements.namedItem(name).value = Array.isArray(value) ? value.join(", ") : (value || "");
+    }
+    loadedProfile = true;
+  }
+
+  document.querySelector("#profile-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const value = name => form.elements.namedItem(name).value.trim();
+    const status = document.querySelector("#profile-status");
+    status.textContent = "Saving…";
+    try {
+      let projects;
+      try {
+        projects = JSON.parse(value("projects") || "[]");
+      } catch {
+        throw new Error("Projects must be valid JSON (an array of project objects).");
+      }
+      await api("/v1/profile", {
+        method: "PUT",
+        body: JSON.stringify({
+          name: value("name"), email: value("email"), phone: value("phone"), location: value("location"),
+          linkedin_url: value("linkedin_url"), github_url: value("github_url"), portfolio_url: value("portfolio_url"),
+          professional_headline: value("professional_headline"),
+          education: {
+            degree: value("degree"), college: value("college"), university: value("university"),
+            graduation_year: value("graduation_year"), relevant_coursework: splitList(value("relevant_coursework"))
+          },
+          career_target: {
+            primary_role: value("primary_role"), secondary_roles: splitList(value("secondary_roles")),
+            experience_level: value("experience_level"), preferred_industries: splitList(value("preferred_industries")),
+            preferred_locations: splitList(value("preferred_locations")),
+            work_authorization_countries: splitList(value("work_authorization_countries")),
+            work_mode: value("work_mode"),
+            salary_expectations: value("salary_expectations"), relocation_preference: value("relocation_preference"),
+            notice_period: value("notice_period")
+          },
+          skills: splitList(value("skills")),
+          projects
+        })
+      });
+      status.textContent = "Profile saved.";
+      loadedProfile = true;
+    } catch (error) {
+      status.textContent = `Profile was not saved: ${error.message}`;
+    }
+  });
+
+  async function loadResume() {
+    const [current, versions] = await Promise.all([
+      api("/v1/resumes/master"),
+      api("/v1/resumes/master/versions")
+    ]);
+    document.querySelector("#resume-content").value = current?.content || "";
+    renderResumeVersions(versions);
+    loadedResume = true;
+  }
+
+  function renderResumeVersions(versions) {
+    const list = document.querySelector("#resume-versions");
+    list.replaceChildren();
+    if (!versions.length) {
+      list.textContent = "No master resume versions saved yet.";
+      return;
+    }
+    for (const version of versions) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "version-item";
+      const date = new Date(version.created_at).toLocaleString();
+      button.textContent = `${date} · ${version.change_note || "Master resume"} · ${version.content_sha256.slice(0, 12)}`;
+      button.addEventListener("click", async () => {
+        try {
+          const full = await api(`/v1/resumes/master/versions/${version.id}`);
+          document.querySelector("#resume-content").value = full.content;
+          document.querySelector("#resume-note").value = `Based on saved version from ${date}`;
+          document.querySelector("#resume-status").textContent = "Loaded a saved version. Saving will create another version.";
+        } catch (error) {
+          document.querySelector("#resume-status").textContent = `Could not load version: ${error.message}`;
+        }
+      });
+      list.append(button);
+    }
+  }
+
+  document.querySelector("#save-resume").addEventListener("click", async () => {
+    const content = document.querySelector("#resume-content").value;
+    const status = document.querySelector("#resume-status");
+    status.textContent = "Saving new version…";
+    try {
+      await api("/v1/resumes/master/versions", {
+        method: "POST",
+        body: JSON.stringify({ content, change_note: document.querySelector("#resume-note").value.trim() })
+      });
+      document.querySelector("#resume-note").value = "";
+      status.textContent = "New master resume version saved.";
+      await loadResume();
+    } catch (error) {
+      status.textContent = `Resume version was not saved: ${error.message}`;
+    }
+  });
+
+  function renderJobs(target, jobs) {
+    target.replaceChildren();
+    if (!jobs.length) {
+      target.textContent = "No saved or matching jobs to display.";
+      return;
+    }
+    for (const job of jobs) {
+      const card = document.createElement("article");
+      card.className = "card job-card";
+      const title = document.createElement("h2");
+      title.textContent = job.title;
+      const company = document.createElement("p");
+      company.textContent = job.company;
+      const location = document.createElement("p");
+      location.textContent = `${job.location || "Location not specified"} · ${job.work_mode || "Work mode unspecified"}`;
+      const score = document.createElement("p");
+      score.className = "job-score";
+      score.textContent = `Profile match: ${job.match_score}%`;
+      const source = document.createElement("p");
+      source.textContent = `${job.source} · Found ${job.date_found}${job.posted_date ? ` · Posted ${job.posted_date}` : ""}${job.salary ? ` · ${job.salary}` : ""}`;
+      const skills = document.createElement("p");
+      skills.className = "job-skills";
+      skills.textContent = `Required: ${job.required_skills.join(", ") || "Not detected"}${job.preferred_skills.length ? ` | Preferred: ${job.preferred_skills.join(", ")}` : ""}`;
+      const breakdown = document.createElement("p");
+      breakdown.textContent = `Score breakdown: ${Object.entries(job.match_breakdown).map(([key, value]) => `${key} ${value}%`).join(" · ")}`;
+      card.append(title, company, location, score, source, skills, breakdown);
+      if (job.description) {
+        const details = document.createElement("details");
+        const summary = document.createElement("summary");
+        summary.textContent = "Job description";
+        const description = document.createElement("p");
+        description.className = "job-description";
+        description.textContent = job.description;
+        details.append(summary, description);
+        card.append(details);
+      }
+      try {
+        const applicationUrl = new URL(job.application_url);
+        if (applicationUrl.protocol === "https:" || applicationUrl.protocol === "http:") {
+          const link = document.createElement("a");
+          link.className = "link-button";
+          link.href = applicationUrl.href;
+          link.target = "_blank";
+          link.rel = "noopener noreferrer";
+          link.textContent = "Open application page";
+          card.append(link);
+        }
+      } catch {
+        const invalidLink = document.createElement("p");
+        invalidLink.textContent = "Application URL is invalid; use the source listing to verify it.";
+        card.append(invalidLink);
+      }
+      target.append(card);
+    }
+  }
+
+  async function loadSavedJobs() {
+    const target = document.querySelector("#job-results");
+    try {
+      const jobs = await api("/v1/jobs?limit=50");
+      renderJobs(target, jobs);
+      if (jobs.length) document.querySelector("#job-search-status").textContent = `Showing ${jobs.length} saved job(s).`;
+    } catch (error) {
+      document.querySelector("#job-search-status").textContent = `Could not load saved jobs: ${error.message}`;
+    }
+  }
+
+  document.querySelector("#job-search-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const value = name => form.elements.namedItem(name).value.trim();
+    const status = document.querySelector("#job-search-status");
+    const reports = document.querySelector("#job-source-reports");
+    const target = document.querySelector("#job-results");
+    const button = document.querySelector("#job-search-submit");
+    status.textContent = "Searching configured public sources…";
+    reports.textContent = "";
+    button.disabled = true;
+    try {
+      const result = await api("/v1/jobs/search", {
+        method: "POST",
+        body: JSON.stringify({
+          role: value("role"),
+          location: value("location"),
+          remote_preference: value("remote_preference"),
+          experience_level: value("experience_level"),
+          minimum_match_score: Number(value("minimum_match_score") || 0),
+          company: value("company"),
+          salary: value("salary"),
+          keywords: splitList(value("keywords"))
+        })
+      });
+      status.textContent = `${result.status}: ${result.total_found} matching job(s); ${result.duplicates_removed} duplicate(s) merged and ${result.existing_listings_updated} saved listing(s) refreshed.`;
+      reports.textContent = result.sources.map(source =>
+        `${source.source}: ${source.status}${source.jobs_found ? ` (${source.jobs_found} listings)` : ""}${source.error ? ` — ${source.error}` : ""}`
+      ).join("\n");
+      if (result.status !== "WAITING_FOR_USER") renderJobs(target, result.jobs);
+    } catch (error) {
+      status.textContent = `Job search failed: ${error.message}`;
+    } finally {
+      button.disabled = false;
+    }
+  });
+
+  function showResult(node, result) {
+    const pre = document.createElement("pre");
+    pre.textContent = JSON.stringify(result, null, 2);
+    node.append(pre);
+  }
+
+  function addApproval(action) {
+    const section = document.createElement("div");
+    section.className = "approval";
+    const title = document.createElement("div");
+    title.textContent = action.confirmation || action.action.replaceAll("_", " ");
+    const state = document.createElement("span");
+    state.className = "approval-state";
+    state.textContent = "waiting for approval";
+    title.className = "approval-details";
+    section.append(title, state);
+    const approve = document.createElement("button");
+    approve.textContent = "Approve";
+    section.append(approve);
+    approvals.prepend(section);
+    approve.addEventListener("click", async () => {
+      approve.disabled = true;
+      try {
+        await api(`/v1/approvals/${action.approval_id}/decision`, {
+          method: "POST", body: JSON.stringify({ approved: true, note: "Approved in local Taj UI" })
+        });
+        state.textContent = "approved — not executed yet";
+        const execute = document.createElement("button");
+        execute.className = "secondary";
+        execute.textContent = "Execute now";
+        section.append(execute);
+        execute.addEventListener("click", async () => {
+          execute.disabled = true;
+          try {
+            const result = await api(`/v1/assistant/actions/${action.id}/execute`, { method: "POST" });
+            state.textContent = result.status.toUpperCase();
+            const item = addMessage(result.summary);
+            showResult(item, result.result);
+          } catch (error) { execute.disabled = false; state.textContent = error.message; }
+        });
+      } catch (error) { approve.disabled = false; state.textContent = error.message; }
+    });
+  }
+
+  document.querySelector("#composer").addEventListener("submit", async event => {
+    event.preventDefault();
+    const text = promptInput.value.trim();
+    if (!text) return;
+    addMessage(text, "user");
+    const previousHistory = chatHistory.slice(-19);
+    chatHistory.push({ role: "user", content: text });
+    saveConversation();
+    promptInput.value = "";
+    sendButton.disabled = true;
+    const thinking = addMessage("Taj is thinking…");
+    thinking.classList.add("thinking");
+    try {
+      const request = parseRequest(text);
+      if (!request) {
+        const response = await api("/v1/assistant/chat", {
+          method: "POST",
+          body: JSON.stringify({ goal: text, history: previousHistory })
+        });
+        thinking.remove();
+        const node = addMessage(response.response, "assistant", `Status: ${response.status}`);
+        chatHistory.push({ role: "assistant", content: response.response });
+        saveConversation();
+        if (response.job_search) {
+          const sourceInfo = response.job_search.sources.map(source =>
+            `${source.source}: ${source.status}${source.error ? ` — ${source.error}` : ""}`
+          ).join("\n");
+          if (sourceInfo) addMessage(sourceInfo, "assistant", "Job-source status");
+          const jobResults = document.createElement("div");
+          jobResults.className = "job-results";
+          node.append(jobResults);
+          renderJobs(jobResults, response.job_search.jobs);
+        }
+        if (response.action?.result) showResult(node, response.action.result);
+        if (response.action?.approval_id) addApproval(response.action);
+      } else {
+        const result = await api("/v1/assistant/actions", { method: "POST", body: JSON.stringify(request) });
+        thinking.remove();
+        const node = addMessage(result.summary, "assistant", `Status: ${result.status}`);
+        chatHistory.push({ role: "assistant", content: result.summary });
+        saveConversation();
+        if (result.result) showResult(node, result.result);
+        if (result.approval_id) addApproval(result);
+      }
+    } catch (error) {
+      thinking.remove();
+      const message = `I couldn't complete that request: ${error.message}`;
+      addMessage(message);
+      chatHistory.push({ role: "assistant", content: message });
+      saveConversation();
+    } finally { sendButton.disabled = false; promptInput.focus(); }
+  });
+  refreshStatus();
+</script>
+</body>
+</html>
